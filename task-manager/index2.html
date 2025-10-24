@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Manager</title>
+  <style>
+    body { font-family: Arial; background: #f5f6fa; margin: 0; padding: 20px; }
+    h1 { color: #273c75; }
+    form { margin-bottom: 20px; }
+    input, textarea { width: 100%; margin-bottom: 10px; padding: 8px; }
+    button { background: #273c75; color: #fff; padding: 10px 15px; border: none; cursor: pointer; }
+    button:hover { background: #40739e; }
+    .task { background: #fff; padding: 15px; margin-bottom: 10px; border-radius: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+  <h1>Task Manager</h1>
+  <form id="taskForm">
+    <input type="text" id="title" placeholder="Task Title" required />
+    <textarea id="description" placeholder="Task Description"></textarea>
+    <button type="submit">Add Task</button>
+  </form>
+  <div id="taskList"></div>
+
+  <script>
+    const api = '/api/tasks';
+
+    const loadTasks = async () => {
+      const res = await fetch(api);
+      const tasks = await res.json();
+      document.getElementById('taskList').innerHTML = tasks.map(t => `
+        <div class="task">
+          <h3>${t.title}</h3>
+          <p>${t.description || ''}</p>
+          <p>Status: ${t.status}</p>
+          <button onclick="deleteTask(${t.id})">Delete</button>
+        </div>
+      `).join('');
+    };
+
+    const deleteTask = async (id) => {
+      await fetch(`${api}/${id}`, { method: 'DELETE' });
+      loadTasks();
+    };
+
+    document.getElementById('taskForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const title = document.getElementById('title').value;
+      const description = document.getElementById('description').value;
+      await fetch(api, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, description })
+      });
+      e.target.reset();
+      loadTasks();
+    });
+
+    loadTasks();
+  </script>
+</body>
+</html>
